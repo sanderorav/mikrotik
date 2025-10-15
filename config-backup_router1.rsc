@@ -1,8 +1,8 @@
-# 2025-10-15 12:25:36 by RouterOS 7.19.6
-# software id = EIDY-MLTG
+# 2025-09-11 12:49:20 by RouterOS 7.19.6
+# software id = Y6EJ-3VB2
 #
 # model = RB962UiGS-5HacT2HnT
-# serial number = HEN08ZVS9G6
+# serial number = HEN08R7S2KN
 /interface bridge
 add name=bridge-lan vlan-filtering=yes
 /interface wireless
@@ -35,6 +35,11 @@ set discover-interface-list=!dynamic
 add bridge=bridge-lan tagged=bridge-lan untagged=ether2 vlan-ids=1
 add bridge=bridge-lan tagged=bridge-lan untagged=ether3 vlan-ids=10
 add bridge=bridge-lan tagged=bridge-lan untagged=ether4 vlan-ids=20
+/interface ovpn-server server
+add certificate=ovpn-server cipher=aes128-cbc,aes256-cbc,aes256-gcm \
+    default-profile=default-encryption disabled=no mac-address=\
+    FE:1A:8F:DC:7A:17 name=ovpn-server1 redirect-gateway=def1 \
+    require-client-certificate=yes tls-version=only-1.2
 /ip address
 add address=172.16.20.1/24 interface=vlan1-adm network=172.16.20.0
 add address=10.10.20.1/22 interface=vlan10-ws network=10.10.20.0
@@ -51,6 +56,10 @@ add action=drop chain=input comment="Block all inbound WAN to router" \
     in-interface=ether1
 add action=accept chain=forward comment="Allow ADM to WS" dst-address=\
     10.10.20.0/22 src-address=172.16.20.0/24
+add action=drop chain=input comment="Block all inbound WAN to router" \
+    in-interface=ether1
+add action=accept chain=forward comment="Allow ADM to WS" dst-address=\
+    10.10.20.0/22 src-address=172.16.20.0/24
 add action=accept chain=forward comment="Allow WS to ADM" dst-address=\
     172.16.20.0/24 src-address=10.10.20.0/22
 add action=drop chain=forward comment="Block GUEST to ADM" dst-address=\
@@ -61,9 +70,20 @@ add action=drop chain=forward comment="Block GUEST to WS" dst-address=\
     10.10.20.0/22 src-address=192.168.40.0/24
 add action=drop chain=forward comment="Block WS to GUEST" dst-address=\
     192.168.40.0/24 src-address=10.10.20.0/22
+add action=accept chain=input comment="Allow OpenVPN from WAN" dst-port=1194 \
+    in-interface=ether1 protocol=tcp
+add action=accept chain=forward comment="Allow VPN to ADM" dst-address=\
+    172.16.20.0/24 src-address=172.31.30.0/24
+add action=accept chain=forward comment="Allow ADM to VPN" dst-address=\
+    172.31.30.0/24 src-address=172.16.20.0/24
 add action=drop chain=forward comment="Drop everything else" disabled=yes
 /ip firewall nat
 add action=masquerade chain=srcnat out-interface=ether1
+add action=masquerade chain=srcnat comment="VPN NAT" out-interface=ether1 \
+    src-address=172.31.30.0/24
+/ppp secret
+add local-address=172.31.30.1 name=vpnuser profile=default-encryption \
+    remote-address=172.31.30.2 service=ovpn
 /system clock
 set time-zone-name=Europe/Tallinn
 /system identity
