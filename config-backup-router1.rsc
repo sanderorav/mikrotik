@@ -1,4 +1,4 @@
-# 2025-09-11 14:56:37 by RouterOS 7.19.6
+# 2025-09-11 14:26:18 by RouterOS 7.19.6
 # software id = Y6EJ-3VB2
 #
 # model = RB962UiGS-5HacT2HnT
@@ -14,6 +14,8 @@ add interface=bridge-lan name=vlan10-ws vlan-id=10
 add interface=bridge-lan name=vlan20-guest vlan-id=20
 /interface wireless security-profiles
 set [ find default=yes ] supplicant-identity=MikroTik
+/ip ipsec peer
+add address=172.20.3.166/32 exchange-mode=ike2 name=peer1 port=500
 /ip pool
 add name=dhcp_pool0 ranges=172.16.20.100-172.16.20.200
 add name=dhcp_pool1 ranges=10.10.20.100-10.10.20.200
@@ -59,6 +61,9 @@ set servers=8.8.8.8
 /ip firewall filter
 add action=accept chain=input dst-port=1194 protocol=tcp
 add action=accept chain=output protocol=tcp src-port=1194
+add action=accept chain=input comment="Allow IPsec IKE/NAT-T" dst-port=\
+    500,4500 protocol=udp
+add action=accept chain=input comment="Allow IPsec ESP" protocol=ipsec-esp
 add action=drop chain=input comment="Block all inbound WAN to router" \
     in-interface=ether1
 add action=accept chain=forward comment="Allow ADM to WS" dst-address=\
@@ -79,11 +84,27 @@ add action=accept chain=forward comment="Allow VPN to ADM" dst-address=\
     172.16.20.0/24 src-address=172.31.30.0/24
 add action=accept chain=forward comment="Allow ADM to VPN" dst-address=\
     172.31.30.0/24 src-address=172.16.20.0/24
+add action=accept chain=forward comment="Allow WS to ADM" dst-address=\
+    172.16.10.0/24 ipsec-policy=in,ipsec src-address=10.10.20.0/22
+add action=accept chain=forward comment="Allow ADM to WS" dst-address=\
+    10.10.8.0/22 ipsec-policy=in,ipsec src-address=172.16.20.0/24
+add action=drop chain=forward comment="Block any other IPsec traffic" \
+    ipsec-policy=in,ipsec
 add action=drop chain=forward comment="Drop everything else" disabled=yes
 /ip firewall nat
+add action=accept chain=srcnat dst-address=172.16.10.0/24 src-address=\
+    10.10.20.0/22
+add action=accept chain=srcnat dst-address=10.10.8.0/22 src-address=\
+    172.16.20.0/24
 add action=masquerade chain=srcnat out-interface=ether1
 add action=masquerade chain=srcnat comment="VPN NAT" out-interface=ether1 \
     src-address=172.31.30.0/24
+/ip ipsec identity
+add peer=peer1
+/ip ipsec policy
+add dst-address=172.16.10.0/24 peer=peer1 src-address=10.10.20.0/22 tunnel=\
+    yes
+add dst-address=10.10.8.0/22 peer=peer1 src-address=172.16.20.0/24 tunnel=yes
 /ppp secret
 add name=client1 profile=ovpn service=ovpn
 /system clock
