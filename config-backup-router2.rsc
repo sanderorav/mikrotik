@@ -1,4 +1,4 @@
-# 2025-09-11 12:55:40 by RouterOS 7.19.6
+# 2025-09-11 13:17:05 by RouterOS 7.19.6
 # software id = EIDY-MLTG
 #
 # model = RB962UiGS-5HacT2HnT
@@ -16,7 +16,7 @@ add interface=bridge-lan name=vlan30-dmz vlan-id=30
 /interface wireless security-profiles
 set [ find default=yes ] supplicant-identity=MikroTik
 /ip ipsec peer
-add address=172.20.3.165/32 exchange-mode=ike2 name=peer1 port=500
+add address=192.168.75.111/32 exchange-mode=ike2 name=peer1 port=500
 /ip pool
 add name=dhcp_pool0 ranges=172.16.10.100-172.16.10.200
 add name=dhcp_pool1 ranges=10.10.10.100-10.10.11.200
@@ -53,6 +53,17 @@ add address=192.168.20.0/24 dns-server=8.8.8.8 gateway=192.168.20.1
 add action=accept chain=input comment="Allow IPsec IKE/NAT-T" dst-port=\
     500,4500 protocol=udp
 add action=accept chain=input comment="Allow IPsec ESP" protocol=ipsec-esp
+add action=accept chain=forward comment="Allow WS to ADM IPsec in,ipsec" \
+    dst-address=172.16.20.0/24 ipsec-policy=in,ipsec src-address=10.10.8.0/22
+add action=accept chain=forward comment="Allow WS to ADM IPsec out,ipsec" \
+    dst-address=172.16.20.0/24 ipsec-policy=out,ipsec src-address=\
+    10.10.8.0/22
+add action=accept chain=forward comment="Allow ADM to WS IPsec in,ipsec" \
+    dst-address=10.10.20.0/22 ipsec-policy=in,ipsec src-address=\
+    172.16.10.0/24
+add action=accept chain=forward comment="Allow ADM to WS IPsec out,ipsec" \
+    dst-address=10.10.20.0/22 ipsec-policy=out,ipsec src-address=\
+    172.16.10.0/24
 add action=drop chain=input comment="Block all inbound WAN to router." \
     in-interface=ether1
 add action=accept chain=forward comment="Allow ADM to WS" dst-address=\
@@ -83,10 +94,6 @@ add action=accept chain=forward comment="Allow WAN to DMZ HTTP" dst-address=\
     10.11.12.0/24 dst-port=80 in-interface=ether1 protocol=tcp
 add action=accept chain=forward comment="Allow WAN to DMZ HTTPS" dst-address=\
     10.11.12.0/24 dst-port=443 in-interface=ether1 protocol=tcp
-add action=accept chain=forward comment="Allow WS to ADM" dst-address=\
-    172.16.20.0/24 ipsec-policy=in,ipsec src-address=10.10.8.0/22
-add action=accept chain=forward comment="Allow ADM to WS" dst-address=\
-    10.10.20.0/22 ipsec-policy=in,ipsec src-address=172.16.10.0/24
 add action=drop chain=forward comment="Drop everything else" disabled=yes
 /ip firewall nat
 add action=accept chain=srcnat dst-address=172.16.20.0/24 src-address=\
@@ -98,7 +105,7 @@ add action=masquerade chain=srcnat out-interface=ether1
 add peer=peer1
 /ip ipsec policy
 add dst-address=172.16.20.0/24 peer=peer1 src-address=10.10.8.0/22 tunnel=yes
-add dst-address=10.10.20.0/22 peer=peer1 src-address=172.16.20.0/24 tunnel=\
+add dst-address=10.10.20.0/22 peer=peer1 src-address=172.16.10.0/24 tunnel=\
     yes
 /system clock
 set time-zone-name=Europe/Tallinn
