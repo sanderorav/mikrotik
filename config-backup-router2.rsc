@@ -1,4 +1,4 @@
-# 2025-09-11 13:17:05 by RouterOS 7.19.6
+# 2025-09-11 14:23:51 by RouterOS 7.19.6
 # software id = EIDY-MLTG
 #
 # model = RB962UiGS-5HacT2HnT
@@ -53,21 +53,16 @@ add address=192.168.20.0/24 dns-server=8.8.8.8 gateway=192.168.20.1
 add action=accept chain=input comment="Allow IPsec IKE/NAT-T" dst-port=\
     500,4500 protocol=udp
 add action=accept chain=input comment="Allow IPsec ESP" protocol=ipsec-esp
-add action=accept chain=forward comment="Allow WS to ADM IPsec in,ipsec" \
-    dst-address=172.16.20.0/24 ipsec-policy=in,ipsec src-address=10.10.8.0/22
-add action=accept chain=forward comment="Allow WS to ADM IPsec out,ipsec" \
-    dst-address=172.16.20.0/24 ipsec-policy=out,ipsec src-address=\
-    10.10.8.0/22
 add action=accept chain=forward comment="Allow ADM to WS IPsec in,ipsec" \
     dst-address=10.10.20.0/22 ipsec-policy=in,ipsec src-address=\
     172.16.10.0/24
 add action=accept chain=forward comment="Allow ADM to WS IPsec out,ipsec" \
-    dst-address=10.10.20.0/22 ipsec-policy=out,ipsec src-address=\
+    dst-address=10.10.20.0/22 ipsec-policy=in,ipsec src-address=\
     172.16.10.0/24
-add action=drop chain=input comment="Block all inbound WAN to router." \
-    in-interface=ether1
-add action=accept chain=forward comment="Allow ADM to WS" dst-address=\
-    10.10.8.0/22 src-address=172.16.10.0/24
+add action=accept chain=forward comment="Allow WS to ADM IPsec in,ipsec" \
+    dst-address=172.16.20.0/24 ipsec-policy=in,ipsec src-address=10.10.8.0/22
+add action=accept chain=forward comment="Allow WS to ADM IPsec out,ipsec" \
+    dst-address=172.16.20.0/24 ipsec-policy=in,ipsec src-address=10.10.8.0/22
 add action=drop chain=input comment="Block all inbound WAN to router." \
     in-interface=ether1
 add action=accept chain=forward comment="Allow ADM to WS" dst-address=\
