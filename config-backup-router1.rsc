@@ -1,4 +1,4 @@
-# 2025-09-11 14:26:18 by RouterOS 7.19.6
+# 2025-09-11 14:39:30 by RouterOS 7.19.6
 # software id = Y6EJ-3VB2
 #
 # model = RB962UiGS-5HacT2HnT
@@ -15,7 +15,7 @@ add interface=bridge-lan name=vlan20-guest vlan-id=20
 /interface wireless security-profiles
 set [ find default=yes ] supplicant-identity=MikroTik
 /ip ipsec peer
-add address=172.20.3.166/32 exchange-mode=ike2 name=peer1 port=500
+add address=192.168.75.109/32 exchange-mode=ike2 name=peer1 port=500
 /ip pool
 add name=dhcp_pool0 ranges=172.16.20.100-172.16.20.200
 add name=dhcp_pool1 ranges=10.10.20.100-10.10.20.200
@@ -64,6 +64,17 @@ add action=accept chain=output protocol=tcp src-port=1194
 add action=accept chain=input comment="Allow IPsec IKE/NAT-T" dst-port=\
     500,4500 protocol=udp
 add action=accept chain=input comment="Allow IPsec ESP" protocol=ipsec-esp
+add action=accept chain=forward comment="Allow ADM to WS IPsec in,ipsec" \
+    dst-address=10.10.8.0/22 ipsec-policy=in,ipsec src-address=172.16.20.0/24
+add action=accept chain=forward comment="Allow ADM to WS IPsec out,ipsec" \
+    dst-address=10.10.8.0/22 ipsec-policy=out,ipsec src-address=\
+    172.16.20.0/24
+add action=accept chain=forward comment="Allow WS to ADM IPsec in,ipsec" \
+    dst-address=172.16.10.0/24 ipsec-policy=in,ipsec src-address=\
+    10.10.20.0/22
+add action=accept chain=forward comment="Allow WS to ADM IPsec out,ipsec" \
+    dst-address=172.16.10.0/24 ipsec-policy=out,ipsec src-address=\
+    10.10.20.0/22
 add action=drop chain=input comment="Block all inbound WAN to router" \
     in-interface=ether1
 add action=accept chain=forward comment="Allow ADM to WS" dst-address=\
@@ -84,10 +95,6 @@ add action=accept chain=forward comment="Allow VPN to ADM" dst-address=\
     172.16.20.0/24 src-address=172.31.30.0/24
 add action=accept chain=forward comment="Allow ADM to VPN" dst-address=\
     172.31.30.0/24 src-address=172.16.20.0/24
-add action=accept chain=forward comment="Allow WS to ADM" dst-address=\
-    172.16.10.0/24 ipsec-policy=in,ipsec src-address=10.10.20.0/22
-add action=accept chain=forward comment="Allow ADM to WS" dst-address=\
-    10.10.8.0/22 ipsec-policy=in,ipsec src-address=172.16.20.0/24
 add action=drop chain=forward comment="Block any other IPsec traffic" \
     ipsec-policy=in,ipsec
 add action=drop chain=forward comment="Drop everything else" disabled=yes
@@ -111,3 +118,6 @@ add name=client1 profile=ovpn service=ovpn
 set time-zone-name=Europe/Tallinn
 /system identity
 set name=Sander-Projekt1
+/system logging
+add topics=ipsec,debug
+add topics=ipsec,debug
