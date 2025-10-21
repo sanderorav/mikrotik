@@ -1,4 +1,4 @@
-# 2025-09-11 14:39:30 by RouterOS 7.19.6
+# 2025-09-11 12:38:33 by RouterOS 7.19.6
 # software id = Y6EJ-3VB2
 #
 # model = RB962UiGS-5HacT2HnT
@@ -41,10 +41,6 @@ set discover-interface-list=!dynamic
 add bridge=bridge-lan tagged=bridge-lan untagged=ether2 vlan-ids=1
 add bridge=bridge-lan tagged=bridge-lan untagged=ether3 vlan-ids=10
 add bridge=bridge-lan tagged=bridge-lan untagged=ether4 vlan-ids=20
-/interface ovpn-server server
-add auth=sha1 certificate=server cipher=blowfish128,aes256-cbc,aes256-gcm \
-    default-profile=ovpn disabled=no mac-address=FE:B0:43:24:4A:66 name=\
-    ovpn-server1 require-client-certificate=yes
 /ip address
 add address=172.16.20.1/24 interface=vlan1-adm network=172.16.20.0
 add address=10.10.20.1/22 interface=vlan10-ws network=10.10.20.0
@@ -52,13 +48,14 @@ add address=192.168.40.1/24 interface=vlan20-guest network=192.168.40.0
 /ip dhcp-client
 add default-route-tables=main interface=ether1
 /ip dhcp-server network
-add address=10.10.20.0/24 dns-server=8.8.8.8 gateway=10.10.20.1
 add address=10.10.20.0/22 dns-server=8.8.8.8 gateway=10.10.20.1
 add address=172.16.20.0/24 dns-server=8.8.8.8 gateway=172.16.20.1
 add address=192.168.40.0/24 dns-server=8.8.8.8 gateway=192.168.40.1
 /ip dns
 set servers=8.8.8.8
 /ip firewall filter
+add action=accept chain=input dst-port=1194 protocol=tcp
+add action=accept chain=output protocol=tcp src-port=1194
 add action=accept chain=input dst-port=1194 protocol=tcp
 add action=accept chain=output protocol=tcp src-port=1194
 add action=accept chain=input comment="Allow IPsec IKE/NAT-T" dst-port=\
@@ -77,8 +74,6 @@ add action=accept chain=forward comment="Allow WS to ADM IPsec out,ipsec" \
     10.10.20.0/22
 add action=drop chain=input comment="Block all inbound WAN to router" \
     in-interface=ether1
-add action=accept chain=forward comment="Allow ADM to WS" dst-address=\
-    10.10.20.0/22 src-address=172.16.20.0/24
 add action=accept chain=forward comment="Allow ADM to WS" dst-address=\
     10.10.20.0/22 src-address=172.16.20.0/24
 add action=accept chain=forward comment="Allow WS to ADM" dst-address=\
