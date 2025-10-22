@@ -1,4 +1,4 @@
-# 2025-09-11 12:38:33 by RouterOS 7.19.6
+# 2025-09-11 13:02:03 by RouterOS 7.19.6
 # software id = Y6EJ-3VB2
 #
 # model = RB962UiGS-5HacT2HnT
@@ -41,6 +41,9 @@ set discover-interface-list=!dynamic
 add bridge=bridge-lan tagged=bridge-lan untagged=ether2 vlan-ids=1
 add bridge=bridge-lan tagged=bridge-lan untagged=ether3 vlan-ids=10
 add bridge=bridge-lan tagged=bridge-lan untagged=ether4 vlan-ids=20
+/interface ovpn-server server
+add certificate=Server default-profile=ovpn disabled=no mac-address=\
+    FE:9A:6A:C5:47:68 name=ovpn-server1 require-client-certificate=yes
 /ip address
 add address=172.16.20.1/24 interface=vlan1-adm network=172.16.20.0
 add address=10.10.20.1/22 interface=vlan10-ws network=10.10.20.0
@@ -54,10 +57,11 @@ add address=192.168.40.0/24 dns-server=8.8.8.8 gateway=192.168.40.1
 /ip dns
 set servers=8.8.8.8
 /ip firewall filter
-add action=accept chain=input dst-port=1194 protocol=tcp
-add action=accept chain=output protocol=tcp src-port=1194
-add action=accept chain=input dst-port=1194 protocol=tcp
-add action=accept chain=output protocol=tcp src-port=1194
+add action=accept chain=input disabled=yes dst-port=1194 protocol=tcp
+add action=accept chain=output disabled=yes protocol=tcp src-port=1194
+add action=accept chain=input disabled=yes dst-port=1194 protocol=tcp
+add action=accept chain=output disabled=yes protocol=tcp src-port=1194
+add action=accept chain=input comment=OVPN-PASS dst-port=1194 protocol=tcp
 add action=accept chain=input comment="Allow IPsec IKE/NAT-T" dst-port=\
     500,4500 protocol=udp
 add action=accept chain=input comment="Allow IPsec ESP" protocol=ipsec-esp
@@ -91,7 +95,7 @@ add action=accept chain=forward comment="Allow VPN to ADM" dst-address=\
 add action=accept chain=forward comment="Allow ADM to VPN" dst-address=\
     172.31.30.0/24 src-address=172.16.20.0/24
 add action=drop chain=forward comment="Block any other IPsec traffic" \
-    ipsec-policy=in,ipsec
+    disabled=yes ipsec-policy=in,ipsec
 add action=drop chain=forward comment="Drop everything else" disabled=yes
 /ip firewall nat
 add action=accept chain=srcnat dst-address=172.16.10.0/24 src-address=\
@@ -100,7 +104,7 @@ add action=accept chain=srcnat dst-address=10.10.8.0/22 src-address=\
     172.16.20.0/24
 add action=masquerade chain=srcnat out-interface=ether1
 add action=masquerade chain=srcnat comment="VPN NAT" out-interface=ether1 \
-    src-address=172.31.30.0/24
+    src-address=172.31.20.0/24
 /ip ipsec identity
 add peer=peer1
 /ip ipsec policy
