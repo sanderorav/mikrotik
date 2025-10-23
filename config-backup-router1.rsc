@@ -1,4 +1,4 @@
-# 2025-09-11 13:02:03 by RouterOS 7.19.6
+# 2025-09-11 12:56:52 by RouterOS 7.19.6
 # software id = Y6EJ-3VB2
 #
 # model = RB962UiGS-5HacT2HnT
