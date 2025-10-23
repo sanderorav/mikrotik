@@ -1,4 +1,4 @@
-# 2025-09-11 12:53:29 by RouterOS 7.19.6
+# 2025-09-11 13:57:29 by RouterOS 7.19.6
 # software id = EIDY-MLTG
 #
 # model = RB962UiGS-5HacT2HnT
@@ -71,6 +71,9 @@ add action=accept chain=forward comment="Allow WAN to DMZ HTTPS" dst-address=\
     10.11.12.0/24 dst-port=443 in-interface=ether1 protocol=tcp
 add action=accept chain=input comment="Allow WAN ping (temp)" disabled=yes \
     in-interface=ether1 protocol=icmp
+add action=accept chain=input comment="Limit ICMP flood" limit=5,1:packet \
+    protocol=icmp
+add action=drop chain=input comment="Drop excess ICMP" protocol=icmp
 add action=drop chain=input comment="Block all inbound WAN to router." \
     in-interface=ether1
 add action=accept chain=forward comment="Allow ADM to WS" dst-address=\
@@ -93,6 +96,11 @@ add action=drop chain=forward comment="Block WS to DMZ" dst-address=\
     10.11.12.0/24 src-address=10.10.8.0/22
 add action=drop chain=forward comment="Block DMZ to WS" dst-address=\
     10.10.8.0/22 src-address=10.11.12.0/24
+add action=add-src-to-address-list address-list=port_scanners \
+    address-list-timeout=1d chain=input comment="Detect port scanners" \
+    connection-limit=10,32 log-prefix=SCAN_DETECTED protocol=tcp
+add action=drop chain=input comment="Block detected scanners" \
+    src-address-list=port_scanners
 add action=drop chain=forward comment="Drop everything else" disabled=yes
 /ip firewall nat
 add action=accept chain=srcnat dst-address=172.16.20.0/24 src-address=\
