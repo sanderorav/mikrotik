@@ -1,4 +1,4 @@
-# 2025-09-11 13:57:29 by RouterOS 7.19.6
+# 2025-09-11 13:10:42 by RouterOS 7.19.6
 # software id = EIDY-MLTG
 #
 # model = RB962UiGS-5HacT2HnT
@@ -96,6 +96,10 @@ add action=drop chain=forward comment="Block WS to DMZ" dst-address=\
     10.11.12.0/24 src-address=10.10.8.0/22
 add action=drop chain=forward comment="Block DMZ to WS" dst-address=\
     10.10.8.0/22 src-address=10.11.12.0/24
+add action=drop chain=forward comment="Block ADM to DMZ" dst-address=\
+    10.11.12.0/24 src-address=172.16.10.0/24
+add action=drop chain=forward comment="Block DMZ to ADM" dst-address=\
+    172.16.10.0/24 src-address=10.11.12.0/24
 add action=add-src-to-address-list address-list=port_scanners \
     address-list-timeout=1d chain=input comment="Detect port scanners" \
     connection-limit=10,32 log-prefix=SCAN_DETECTED protocol=tcp
