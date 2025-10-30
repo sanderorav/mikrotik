@@ -1,4 +1,4 @@
-# 2025-09-11 13:10:42 by RouterOS 7.19.6
+# 2025-09-11 14:40:43 by RouterOS 7.19.6
 # software id = EIDY-MLTG
 #
 # model = RB962UiGS-5HacT2HnT
@@ -27,6 +27,9 @@ add address-pool=dhcp_pool0 interface=vlan1-adm lease-time=10m name=dhcp1
 add address-pool=dhcp_pool1 interface=vlan10-ws lease-time=10m name=dhcp2
 add address-pool=dhcp_pool2 interface=vlan20-guest lease-time=10m name=dhcp3
 add address-pool=dhcp_pool3 interface=vlan30-dmz lease-time=10m name=dhcp4
+/snmp community
+set [ find default=yes ] disabled=yes
+add addresses=192.168.25.7/32 name=router2
 /interface bridge port
 add bridge=bridge-lan interface=ether2
 add bridge=bridge-lan interface=ether3 pvid=10
@@ -69,6 +72,8 @@ add action=accept chain=forward comment="Allow WAN to DMZ HTTP" dst-address=\
     10.11.12.0/24 dst-port=80 in-interface=ether1 protocol=tcp
 add action=accept chain=forward comment="Allow WAN to DMZ HTTPS" dst-address=\
     10.11.12.0/24 dst-port=443 in-interface=ether1 protocol=tcp
+add action=accept chain=input comment="Allow SNMP from Monit" dst-port=161 \
+    protocol=udp src-address=192.168.25.7
 add action=accept chain=input comment="Allow WAN ping (temp)" disabled=yes \
     in-interface=ether1 protocol=icmp
 add action=accept chain=input comment="Limit ICMP flood" limit=5,1:packet \
@@ -122,6 +127,9 @@ add peer=peer1
 add dst-address=172.16.20.0/24 peer=peer1 src-address=10.10.8.0/22 tunnel=yes
 add dst-address=10.10.20.0/22 peer=peer1 src-address=172.16.10.0/24 tunnel=\
     yes
+/snmp
+set contact="Sander Orav" enabled=yes location="Kusagil ikka" trap-community=\
+    router2 trap-version=2
 /system clock
 set time-zone-name=Europe/Tallinn
 /system identity
